@@ -1,7 +1,7 @@
 
 FROM node:alpine
 
-WORKDIR /backend
+WORKDIR /frontend
 
 COPY package*.json ./
 
@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY . .
 RUN npm install && npx tsc
 
-EXPOSE 5000
+EXPOSE 4000
 
 # the command that starts our app
 CMD ["node", "dist/index.js"]
