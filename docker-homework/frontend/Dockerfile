@@ -3,10 +3,8 @@ FROM node:alpine
 
 WORKDIR /frontend
 
-COPY package*.json ./
-
-
 COPY . .
+
 RUN npm install && npx tsc
 
 EXPOSE 4000

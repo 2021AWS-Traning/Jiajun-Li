@@ -4,9 +4,9 @@ import express from 'express';
 const app = express();
 app.use(express.json());
 app.get('/', (req: any, res: any) => {
-axios.get('http://localhost:90')
+axios.get('http://backend:5000')
     .then(function (response) {
-      res.send(response.data);
+      res.send("get response from backend!" + response.data);
     })
     .catch(function (error) {
       console.log(error);
