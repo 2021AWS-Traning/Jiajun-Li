@@ -22,6 +22,16 @@ services:
       - "90:80"
     networks:
       - frontend
+  database:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=jjl
+      - POSTGRES_PASSWORD=jjl
+      - POSTGRES_DB=demo
+    volumes:
+      - ./DB/init.sql:/docker-entrypoint-initdb.d/init.sql
 networks:
   frontend:
     # Use a custom driver
