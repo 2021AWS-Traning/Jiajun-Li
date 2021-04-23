@@ -6,4 +6,4 @@ node_modules
 .vscode
 .npmrc
 .idea/
-
+DB/postgres-data/*
