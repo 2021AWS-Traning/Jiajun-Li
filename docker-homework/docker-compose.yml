@@ -2,6 +2,7 @@
 version: "3.8"
 services:
   frontend:
+    command: sh -c "npm install && npx tsc && node dist/index.js"
     build:
       context: ./frontend
     networks:
@@ -10,10 +11,13 @@ services:
     volumes:
     - ./frontend:/frontend
   backend:
+    command: sh -c "npm install && npx tsc && node dist/index.js"
     build:
       context: ./backend
     networks:
       - backend
+    volumes:
+    - ./backend:/backend
   nginx:
     restart: always
     build:
@@ -32,10 +36,10 @@ services:
       - POSTGRES_DB=demo
     volumes:
       - ./DB/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend
 networks:
   frontend:
-    # Use a custom driver
     driver: bridge
   backend:
-    # Use a custom driver which takes special options
     driver: bridge
