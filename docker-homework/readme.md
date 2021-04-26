@@ -38,7 +38,7 @@ docker enables containers to be shared conveniently through systems. However, vm
 ### Performance
 docker containers would require less resource and start up quicker. VM use individual OS and consequently more resource to be used.
 
-##Docker hub images:
+## Docker hub images:
 https://hub.docker.com/repository/docker/jiajunli229/docker-homework  
 jiajunli229/docker-homework:frontend  
 jiajunli229/docker-homework:backend
