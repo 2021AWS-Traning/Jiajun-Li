@@ -1,11 +1,19 @@
 
-FROM node:alpine
+FROM node:alpine AS builder
 
 WORKDIR /frontend
 
 COPY . .
 
 RUN npm install && npx tsc
+
+FROM node:alpine
+
+WORKDIR /frontend
+
+COPY package.json ./
+
+COPY --from=builder /frontend/dist ./dist
 
 EXPOSE 4000
 
