@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mynode-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mynode-app
+  template:
+    metadata:
+      labels:
+        app: mynode-app
+    spec:
+      containers:
+        - name: mynode-app
+          image: jiajunli229/node-server
+          ports:
+            - containerPort: 3000
