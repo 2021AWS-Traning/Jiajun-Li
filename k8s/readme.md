@@ -1,6 +1,6 @@
-# Docker homework
+# k8s homework
 ## Activation of the local framework
-1. `minikube start --vm-driver virtualbox`
+1. `minikube start --vm-driver virtualbox` KVM2
 2. `minikube addons enable ingress`
 3. `kubectl apply -f deployment.yaml`
 4. `kubectl apply -f service.yaml`
@@ -13,7 +13,7 @@ example `192.168.99.100 mynodeapp.com`
 
 ## Concepts
 ### kubectl logs
-Print the logs for a container in a pod or specified resource. I
+Print the logs for a container in a pod or specified resource. 
 ### kubectl describe
 Show details of a specific resource or group of resources
 ### apply
