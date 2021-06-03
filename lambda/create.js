@@ -4,7 +4,7 @@ const s3 = new AWS.S3();
 exports.handler = function(event, context) {
   console.log("Request received:\n", JSON.stringify(event));
   const responseData = {};
-  if (event.RequestType == 'Create') {
+  if (event.RequestType === 'Create') {
     const params = {
       Bucket: event.ResourceProperties.Bucket,
       Key: event.ResourceProperties.Key,
@@ -16,7 +16,7 @@ exports.handler = function(event, context) {
       console.log(JSON.stringify(err));
       response.send(event, context, response.FAILED, responseData);
     });
-  } else if (event.RequestType == 'Delete') {
+  } else if (event.RequestType === 'Delete') {
     const deleteParams = {
       Bucket: event.ResourceProperties.Bucket,
       Key: event.ResourceProperties.Key
