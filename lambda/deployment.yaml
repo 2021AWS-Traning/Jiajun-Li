@@ -29,11 +29,16 @@ Resources:
   JiajunSourceCfBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: 'lambda-jiajun-toy'
+      BucketName: 'jiajun-source-bucket'
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: 's3:ObjectCreated:*'
             Function: !GetAtt LambdaFunction.Arn
+
+  jiajunTargetCfBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 'jiajun-target-bucket'
 
   LambdaRole:
     Type: AWS::IAM::Role
@@ -105,4 +110,4 @@ Resources:
       FunctionName: !Ref LambdaFunction
       Action: 'lambda:InvokeFunction'
       Principal: s3.amazonaws.com
-      SourceArn: !Join [ '', [ 'arn:aws:s3:::', 'lambda-jiajun-toy' ] ]
+      SourceArn: !Join [ '', [ 'arn:aws:s3:::', 'jiajun-source-bucket' ] ]
