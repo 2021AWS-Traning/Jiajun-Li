@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template for Lambda Sample.
+
+
+Outputs:
+  LambdaRoleARN:
+    Description: Role for Lambda execution.
+    Value:
+      Fn::GetAtt:
+        - LambdaRole
+        - Arn
+    Export:
+      Name:
+        Fn::Sub: LambdaRole
+  LambdaFunctionName:
+    Value:
+      Ref: LambdaFunction
+  LambdaFunctionARN:
+    Description: Lambda function ARN.
+    Value:
+      Fn::GetAtt:
+        - LambdaFunction
+        - Arn
+    Export:
+      Name:
+        Fn::Sub: LambdaARN-jiajun-cloudFormation
+
+Resources:
+  JiajunSourceCfBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 'jiajun-source-bucket'
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt LambdaFunction.Arn
+
+  jiajunTargetCfBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 'jiajun-target-bucket'
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: jiajun-lambda-role-cf
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Path: /
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: lambda-function-jiajun-cloudFormation
+      Runtime: nodejs10.x
+      Code:
+        ZipFile: |
+          console.log('Loading function');
+
+          const aws = require('aws-sdk');
+
+          const s3 = new aws.S3({ apiVersion: '2006-03-01' });
+
+          const targetBucketName = 'jiajun-target-bucket'
+
+          exports.handler = async (event) => {
+            const sourceBucketName = event.Records[0].s3.bucket.name;
+            const sourceKey = event.Records[0].s3.object.key;
+            try {
+
+              const result = await s3.copyObject({
+                Bucket: targetBucketName,
+                CopySource: `${sourceBucketName}/${sourceKey}`,
+                Key: sourceKey
+              }).promise();
+              console.log('upload to target bucket', JSON.stringify(result));
+
+              return result;
+            } catch (err) {
+              console.log(err);
+            }
+          };
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 10
+      Role:
+        Fn::GetAtt:
+          - LambdaRole
+          - Arn
+      Environment:
+        Variables:
+          ENV:
+            Fn::Sub: jiajun-cloudFormation
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LambdaFunction
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceArn: !Join [ '', [ 'arn:aws:s3:::', 'jiajun-source-bucket' ] ]
