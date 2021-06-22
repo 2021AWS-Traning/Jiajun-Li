@@ -1,30 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Template for Lambda Sample.
 
-
-Outputs:
-  LambdaRoleARN:
-    Description: Role for Lambda execution.
-    Value:
-      Fn::GetAtt:
-        - LambdaRole
-        - Arn
-    Export:
-      Name:
-        Fn::Sub: LambdaRole
-  LambdaFunctionName:
-    Value:
-      Ref: LambdaFunction
-  LambdaFunctionARN:
-    Description: Lambda function ARN.
-    Value:
-      Fn::GetAtt:
-        - LambdaFunction
-        - Arn
-    Export:
-      Name:
-        Fn::Sub: LambdaARN-jiajun-cloudFormation
-
 Resources:
   JiajunSourceCfBucket:
     Type: AWS::S3::Bucket
@@ -60,8 +36,7 @@ Resources:
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName:
-        Fn::Sub: lambda-function-jiajun-cloudFormation
+      FunctionName: 'lambda-function-jiajun-cloudFormation'
       Runtime: nodejs10.x
       Code:
         ZipFile: |
