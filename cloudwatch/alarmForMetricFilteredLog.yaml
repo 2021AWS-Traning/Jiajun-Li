@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: jiajun-lambda-role-cf
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Path: /
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: 'lambda-function-jiajun-cloudFormation'
+      Runtime: nodejs10.x
+      Code:
+        ZipFile: |
+          console.log('event looks like', event);
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 10
+      Role:
+        Fn::GetAtt:
+          - LambdaRole
+          - Arn
+      Environment:
+        Variables:
+          ENV:
+            Fn::Sub: jiajun-cloudFormation
+
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(1 minute)
+      Targets:
+        - Arn: !GetAtt 'LambdaFunction.Arn'
+          Id: 'LambdaFunction'
+
+  InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventRule.Arn
+
+  MetricFliterAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: jiajun-metric-filter-error
+      Namespace: 'ERROR'
+      MetricName: ERROR
+      Statistic: Sum
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      EvaluationPeriods: 1
+      Period: 60
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmSNSTopic
+
+  AlarmSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: AlarmTopic
+      Subscription:
+        - Protocol: email
+          Endpoint: '398160658@qq.com'
+
+  ErrorFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName:
+        !Join [ '', [ '/aws/lambda/', 'lambda-function-jiajun-cloudFormation' ] ]
+      FilterPattern: "ERROR"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "ERROR"
+          MetricName: "ERROR"
