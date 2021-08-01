@@ -69,13 +69,17 @@ Resources:
       Targets:
         - Arn: !Ref createSnsTopic
           Id: 'SNSTopic'
+          Input: !Sub |
+            {
+              "a": "a",
+              "b": "b",
+              "c": "c"
+            }
 
   createSnsTopic:
     Type: AWS::SNS::Topic
     Properties:
       Subscription:
-        - Endpoint: "398160658@qq.com"
-          Protocol: email
         - Endpoint:
             Fn::GetAtt:
               - SQSForLambda
@@ -138,3 +142,15 @@ Resources:
       FunctionName: !Ref LambdaFunction
       Principal: sns.amazonaws.com
 
+  SnsSubscriptionPolicy:
+    Type: "AWS::SNS::Subscription"
+    Properties:
+      Endpoint: "398160658@qq.com"
+      FilterPolicy: !Sub |
+        {
+          "sender": [
+            "jiajun"
+          ]
+        }
+      Protocol: email
+      TopicArn: !Ref createSnsTopic
