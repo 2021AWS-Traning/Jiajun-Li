@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: jiajun-lambdqqqqqa-role-cf
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+      Policies:
+        - PolicyName: allowSqs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ChangeMessageVisibility
+                Resource: !GetAtt SQSForLambda.Arn
+  LambdaFunctionForSQS:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: 'lambda-function-SQS-jiajun-cloudFormation'
+      Runtime: nodejs10.x
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log('event looks like', event);
+          };
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 10
+      Role:
+        Fn::GetAtt:
+          - LambdaRole
+          - Arn
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: 'lambda-function-jiajun-cloudFormation'
+      Runtime: nodejs10.x
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log('event looks like', event);
+          };
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 10
+      Role:
+        Fn::GetAtt:
+          - LambdaRole
+          - Arn
+
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(1 minute)
+      Targets:
+        - Arn: !Ref createSnsTopic
+          Id: 'SNSTopic'
+
+  createSnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: "398160658@qq.com"
+          Protocol: email
+        - Endpoint:
+            Fn::GetAtt:
+              - SQSForLambda
+              - Arn
+          Protocol: sqs
+        - Endpoint:
+            Fn::GetAtt:
+              - LambdaFunction
+              - Arn
+          Protocol: lambda
+  TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - Ref: createSnsTopic
+      PolicyDocument:
+        Version: '2008-10-17'
+        Id: __default_policy_ID
+        Statement:
+          - Sid: __default_statement_ID
+            Effect: Allow
+            Principal:
+              AWS: "arn:aws:sts::160071257600:assumed-role/PowerUserPlusRole/jiajun.li1@thoughtworks.com"
+            Action:
+              - SNS:GetTopicAttributes
+              - SNS:SetTopicAttributes
+              - SNS:AddPermission
+              - SNS:RemovePermission
+              - SNS:DeleteTopic
+              - SNS:Subscribe
+              - SNS:ListSubscriptionsByTopic
+              - SNS:Publish
+              - SNS:Receive
+            Resource:
+              Ref: createSnsTopic
+            Condition:
+              StringEquals:
+                AWS:SourceOwner:
+                  Ref: AWS::AccountId
+          - Sid: TrustCWEToPublishEventsToMyTopic
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Resource:
+              Ref: createSnsTopic
+  SQSForLambda:
+    Type: AWS::SQS::Queue
+
+  LambdaFunctionForSQSEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt SQSForLambda.Arn
+      FunctionName: !GetAtt LambdaFunctionForSQS.Arn
+
+  SnsInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref LambdaFunction
+      Principal: sns.amazonaws.com
+
