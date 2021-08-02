@@ -78,18 +78,7 @@ Resources:
 
   createSnsTopic:
     Type: AWS::SNS::Topic
-    Properties:
-      Subscription:
-        - Endpoint:
-            Fn::GetAtt:
-              - SQSForLambda
-              - Arn
-          Protocol: sqs
-        - Endpoint:
-            Fn::GetAtt:
-              - LambdaFunction
-              - Arn
-          Protocol: lambda
+
   TopicPolicy:
     Type: AWS::SNS::TopicPolicy
     Properties:
@@ -142,15 +131,57 @@ Resources:
       FunctionName: !Ref LambdaFunction
       Principal: sns.amazonaws.com
 
-  SnsSubscriptionPolicy:
+
+  SnsInvokeQueueePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt SQSForLambda.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref createSnsTopic
+      Queues:
+        - !Ref SQSForLambda
+  SnsEmailSubscriptionPolicy:
     Type: "AWS::SNS::Subscription"
     Properties:
       Endpoint: "398160658@qq.com"
       FilterPolicy: !Sub |
         {
-          "sender": [
-            "jiajun"
+          "target": [
+            "email"
           ]
         }
       Protocol: email
+      TopicArn: !Ref createSnsTopic
+
+  SnsLambdaSubscriptionPolicy:
+    Type: "AWS::SNS::Subscription"
+    Properties:
+      Endpoint: !GetAtt LambdaFunction.Arn
+      FilterPolicy: !Sub |
+        {
+          "target": [
+            "lambda"
+          ]
+        }
+      Protocol: lambda
+      TopicArn: !Ref createSnsTopic
+
+  SnsQueueSubscriptionPolicy:
+    Type: "AWS::SNS::Subscription"
+    Properties:
+      Endpoint: !GetAtt SQSForLambda.Arn
+      FilterPolicy: !Sub |
+        {
+          "target": [
+            "queue"
+          ]
+        }
+      Protocol: sqs
       TopicArn: !Ref createSnsTopic
